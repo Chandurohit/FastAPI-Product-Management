@@ -1,7 +1,7 @@
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from models import Product
-from database import session, engine, get_db
+from database import SessionLocal, engine, get_db
 import database_models
 from sqlalchemy.orm import Session
 
@@ -28,16 +28,8 @@ products = [
     Product(id=4, name="Smartwatch", description="A stylish smartwatch", price=149.99, quantity=25),
 ]
 
-def get_db():
-    db=session()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
 def init_db():
-    db = session()
+    db = SessionLocal()
 
     count=db.query(database_models.Product).count()
     if count==0:
