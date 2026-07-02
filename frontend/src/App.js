@@ -1,13 +1,15 @@
 import React, { useEffect, useState, useMemo } from "react";
-import axios from "axios";
-import "./App.css";
-import TaglineSection from "./TaglineSection";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import TaglineSection from "./components/TaglineSection/TaglineSection";
+import api from "./api/apiClient";
+import "./styles/App.css";
 
-const api = axios.create({
-  baseURL: "https://fastapi-product-api-3rog.onrender.com",
-});
-
-function App() {
+function Dashboard() {
+  const { currentUser: user, logout } = useAuth();
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState({
     id: "",
@@ -24,24 +26,10 @@ function App() {
   const [sortField, setSortField] = useState("id");
   const [sortDirection, setSortDirection] = useState("asc");
 
-  // Auto-dismiss messages after 5 seconds
+  // Fetch all products on mount
   useEffect(() => {
-    if (message) {
-      const timer = setTimeout(() => {
-        setMessage("");
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [message]);
-
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => {
-        setError("");
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
+    fetchProducts();
+  }, []);
 
   // Fetch all products
   const fetchProducts = async () => {
@@ -56,21 +44,17 @@ function App() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    // Inline initial fetch to avoid referencing external deps
-    const run = async () => {
-      setLoading(true);
-      try {
-        const res = await api.get("/products/");
-        setProducts(res.data);
-        setError("");
-      } catch (err) {
-        setError("Failed to fetch products");
-      }
+  // Logout handler
+  const handleLogout = async () => {
+    setLoading(true);
+    try {
+      await logout();
+    } catch (err) {
+      setError("Logout failed. Please try again.");
+    } finally {
       setLoading(false);
-    };
-    run();
-  }, []);
+    }
+  };
 
   // Handle sorting
   const handleSort = (field) => {
@@ -202,8 +186,14 @@ function App() {
           <h1>Telusko Trac</h1>
         </div>
         <div className="top-actions">
+          <span className="user-greeting">
+            Welcome, <strong>{user?.username}</strong>!
+          </span>
           <button className="btn btn-light" onClick={fetchProducts} disabled={loading}>
             Refresh
+          </button>
+          <button className="btn btn-logout" onClick={handleLogout} disabled={loading}>
+            Logout
           </button>
         </div>
       </header>
@@ -369,4 +359,24 @@ function App() {
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
+  );
+}

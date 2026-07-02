@@ -1,8 +1,6 @@
-from pydantic import BaseModel
+"""
+Compatibility layer for Pydantic schemas/models.
+Imports and re-exports the Product schema model from the refactored package.
+"""
 
-class Product(BaseModel):
-    id: int
-    name: str
-    description: str
-    price: float
-    quantity: int
+from app.schemas.product_schema import Product

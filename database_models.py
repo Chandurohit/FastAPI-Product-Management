@@ -1,11 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float
-from sqlalchemy.ext.declarative import declarative_base
+"""
+Compatibility layer for database models.
+Imports and re-exports the SQLAlchemy Declarative Base and Product model.
+"""
 
-Base = declarative_base()
-class Product(Base):
-    __tablename__ = "products"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
-    description = Column(String)
-    price = Column(Float)
-    quantity = Column(Integer)
+from app.database.base import Base
+from app.models.product_model import Product
